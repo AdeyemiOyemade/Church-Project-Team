@@ -1,0 +1,81 @@
+--Populate the standard Address Type 
+
+INSERT INTO [DLBC_Dev].[dbo].[STANDARD_ADDRESS_TYPE](
+  [ADDRESS_TYPE_CD]
+      ,[ADDRESS_TYPE_NM]
+      ,[DESCRIPTION_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+      ('P', 'Permanent','Permanent Address',user,getdate()),
+	  ('M', 'Mailing','Mailing Address',user,getdate()),
+	  ('O', 'Office','Office Address',user,getdate()),
+	  ('T', 'Temporary','Temporary Address',user,getdate());
+
+--Populate the standard Member Type 
+
+   INSERT INTO [DLBC_Dev].[dbo].[MEMBER_TYPE](
+      [MEMBER_TYP]
+      ,[DESCRIPTION_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+      (  'V','Visitor',user,getdate()),
+	  ('N','New Member',user,getdate()),
+	  ('E', 'Existing Member',user,getdate()),
+	  ('R', 'Returning Member',user,getdate());
+
+--Populate the standard Contribution 
+
+ INSERT INTO [DLBC_Dev].[dbo].[STANDARD_CONTRIBUTION](
+      [TYPE_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+      (  'Tithe',user,getdate()),
+	  ('Offering',user,getdate()),
+	  ('Building Fund',user,getdate()),
+	  ('Headquater Project',user,getdate()),
+	  ('Youth Fest',user,getdate()),
+	  ('Young Adult Program',user,getdate()),
+	  ('Easter Retreat',user,getdate()),
+	  ('December Retreat',user,getdate()),
+	  ('Special Event',user,getdate()),
+	  ('Children Program',user,getdate()),
+	  ('Senior Citizen Program',user,getdate());
+
+--Populate the standard Group
+
+  Alter table [DLBC_Dev].[dbo].[STANDARD_GROUP]
+	  Alter column description_txt varchar(100);
+
+   INSERT INTO [DLBC_Dev].[dbo].[STANDARD_GROUP]([GROUP_TYPE_CD]
+      ,[GROUP_AGE_BAND]
+      ,[GROUP_NM]
+      ,[DESCRIPTION_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+     (  'C','Age 1 to 8','Children','Children from Ages 1 to 5 years',user,getdate()),
+	  ('Y','Age 9 to 15','Youth','Young People from Ages 6 to 15',user,getdate()),
+	  ('YA','Age 20 to 38','Young Adult','Young People from Ages 20 to 38',user,getdate()),
+	  ('A','Age 39 to 65','Adult','Adult People from 39 to 65',user,getdate()),
+	  ('S','Age 65  Above','Seniors','Senior Adult People 65 and Above',user,getdate());
+
+--Populate the standard Ministry
+
+ INSERT INTO [DLBC_Dev].[dbo].[STANDARD_MINISTRY](
+      [MINISTRY_NM]
+      ,[DESCRIPTION_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+     (  'Pastorial','Pastorial',user,getdate()),
+	  ('Chior','Choriters',user,getdate()),
+	  ('Sanitation','Sanitation',user,getdate()),
+	  ('Praise Worship','Praise Worship',user,getdate()),
+	  ('Children','Children',user,getdate()),
+	  ('Usher','Ushering',user,getdate()),
+	   ('Electronics','Electronics',user,getdate()),
+	   ('Accounts','Accounting',user,getdate()),
+	   ('Transport','Transportation',user,getdate());
