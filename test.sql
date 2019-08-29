@@ -5,3 +5,4 @@ CREATE TABLE test (
 );
 
 INSERT INTO test (id, name) VALUES (1, Adeyemi);
+Insert INTO test (id, name) VALUES (2, Melissa);
