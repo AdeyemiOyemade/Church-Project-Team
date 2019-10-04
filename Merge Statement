@@ -1,0 +1,241 @@
+MUZEDATAPC\MUZEDATASERVER
+
+
+Page 54 Dimensional Modeling PDF
+
+
+  
+--Added a unique code to member tables
+--Added a column to accompdate the unique code
+
+  Alter Table [DLBC_Dev].[dbo].[MEMBER]
+  Add [MEMBER_CODE] VARCHAR(50) NOT NULL;
+  
+--Added a unique constraint to the member table
+  
+  SELECT
+       SUBSTRING([Last Name],1,3) + + SUBSTRING([First Name],1,3) + + cast(len([Last Name]) as varchar) as [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Address 1]
+      ,[Address 2]
+      ,[City]
+      ,[State]
+      ,[Zip Code]
+      ,[Cellphone]
+      ,[Home Phone]
+      ,[eMail Address]
+      ,[Secondary eMail Address]
+      ,[State_ID]
+  FROM [DLBC_Stg].[dbo].[Member All Stg]
+  
+  
+ --Created a new table for Change Data Capture
+ 
+ 
+SELECT
+       SUBSTRING([Last Name],1,3) + + SUBSTRING([First Name],1,3) + + cast(len([Last Name]) as varchar) as [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Address 1]
+      ,[Address 2]
+      ,[City]
+      ,[State]
+      ,[Zip Code]
+      ,[Cellphone]
+      ,[Home Phone]
+      ,[eMail Address]
+      ,[Secondary eMail Address]
+      ,[State_ID]
+
+  INTO [Member All CDC Stg]
+  FROM [DLBC_Stg].[dbo].[Member All Stg]
+  
+  
+ --Dropping current index and recreating
+ 
+   DROP index [dbo].[MEMBER].[UK_MEMBER];
+
+  CREATE UNIQUE NONCLUSTERED INDEX [UK_MEMBER] ON [dbo].[MEMBER]
+(
+	[MEMBER_CODE] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+  ;
+--SYNCHRONIZE THE TARGET WITH THE SOURCE
+WITH PREP AS (SELECT [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Cellphone]
+      ,[eMail Address]
+      ,isnull([State_ID],'Unknown') as [State_ID]
+  FROM [DLBC_Stg].[dbo].[Member All CDC Stg]),
+SOURCE
+(
+SELECT [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Cellphone]
+      ,[eMail Address]
+      ,[LOCATION_ID]
+  FROM [PREP] M
+LEFT JOIN [DLBC_Dev].[dbo].[LOCATION] L
+  ON M.[State_ID] = L.[LOCATION_NM]
+  OR M.[State_ID] = L.[STATE_NM])
+
+MERGE  [DLBC_Dev].[dbo].[MEMBER] AS T
+USING SOURCE AS S
+ON T.[MEMBER_CODE] = S.[Member Code]
+
+--When records are matched, update the records if there is any change to the named columns
+WHEN MATCHED THEN 
+UPDATE 
+SET T.[PRIMARY_FIRST_NM] = S.[First Name],
+    T.[PRIMARY_FIRST_NM] =  S.[First Name],
+    T.[PRIMARY_MIDDEL_NM] = S.[Middle Name],
+	T.[PRIMARY_EMAIL_ADDRESS_TXT] = S.[eMail Address],
+	T.[GENDER] = S.[Gender]
+--When records are not matched, insert the records into the Target meaning they donot exist in the target
+WHEN NOT MATCHED BY TARGET THEN 
+INSERT ([PARENT_MEMBER_ID],[PRIMARY_FIRST_NM],[PRIMARY_MIDDEL_NM],[PRIMARY_LAST_NM],[DOB],[PRIMARY_EMAIL_ADDRESS_TXT],[PRIMARY_PHONE_NO]
+      ,[CREATE_USER_ID],[CREATE_DT],[LAST_UPDATE_USER_ID],[LAST_UPDATE_DT],[LOCATION_ID],[GENDER],[MEMBER_CODE])
+
+ VALUES     (1,S.[First Name],S.[Middle Name],S.[Last Name],SYSDATE,S.[eMail Address],S.[Cellphone],USER,GETDATE(),USER,GETDATE(),S.[LOCATION_ID],S.[Gender],S.[Member Code])
+WHEN NOT MATCHED BY SOURCE THEN
+DELETE;
+
+
+SELECT L.[LOCATION_ID]
+FROM [DLBC_Dev].[dbo].[LOCATION] L 
+LEFT JOIN [Member All CDC Stg] M
+ON L.[LOCATION_NM] = M.[State_ID]
+
+-- Location Loading dumy values for late arriving child records
+INSERT INTO [DLBC_Dev].[dbo].[LOCATION](
+       [LOCATION_NM]
+      ,[ADDRESS_LINE_1_TXT]
+      ,[ADDRESS_LINE_2]
+      ,[CITY_NM]
+      ,[STATE_NM]
+      ,[COUNTRY_NM]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT]
+      ,[PRIMARY_PHONE]
+      ,[ZIP_CODE])
+VALUES ('Unknown','Unknown','Unknown','Unknown','Unkown','Unknown',User,getdate(),'000-000-0000','0000')
+
+----Procedure for loading the member data 
+
+CREATE PROCEDURE LoadMEMBER AS
+BEGIN
+DELETE FROM [DLBC_Dev].[dbo].[MEMBER];
+
+WITH PREP AS (SELECT [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Cellphone]
+      ,[eMail Address]
+      ,isnull([State_ID],'Unknown') as [State_ID]
+  FROM [DLBC_Stg].[dbo].[Member All CDC Stg]),
+SOURCE AS
+(
+SELECT [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Cellphone]
+      ,[eMail Address]
+      ,[LOCATION_ID]
+  FROM [PREP] M
+LEFT JOIN [DLBC_Dev].[dbo].[LOCATION] L
+  ON M.[State_ID] = L.[LOCATION_NM]
+  OR M.[State_ID] = L.[STATE_NM])
+
+MERGE  [DLBC_Dev].[dbo].[MEMBER] AS T
+USING SOURCE AS S
+ON T.[MEMBER_CODE] = S.[Member Code]
+
+--When records are matched, update the records if there is any change to the named columns
+WHEN MATCHED THEN 
+UPDATE 
+SET T.[PRIMARY_FIRST_NM] = S.[First Name],
+    T.[PRIMARY_LAST_NM] =  S.[Last Name],
+    T.[PRIMARY_MIDDEL_NM] = S.[Middle Name],
+	T.[PRIMARY_EMAIL_ADDRESS_TXT] = S.[eMail Address],
+	T.[GENDER] = S.[Gender]
+--When records are not matched, insert the records into the Target meaning they donot exist in the target
+WHEN NOT MATCHED BY TARGET THEN 
+INSERT ([PARENT_MEMBER_ID],[PRIMARY_FIRST_NM],[PRIMARY_MIDDEL_NM],[PRIMARY_LAST_NM],[DOB],[PRIMARY_EMAIL_ADDRESS_TXT],[PRIMARY_PHONE_NO]
+      ,[CREATE_USER_ID],[CREATE_DT],[LAST_UPDATE_USER_ID],[LAST_UPDATE_DT],[LOCATION_ID],[GENDER],[MEMBER_CODE])
+
+ VALUES     (1,S.[First Name],S.[Middle Name],S.[Last Name],GETDATE(),S.[eMail Address],S.[Cellphone],USER,GETDATE(),USER,GETDATE(),S.[LOCATION_ID],S.[Gender],S.[Member Code])
+WHEN NOT MATCHED BY SOURCE THEN
+DELETE;
+END
+
+---Stored Procedure with Unique check
+
+CREATE PROCEDURE LoadMEMBER AS
+BEGIN
+DELETE FROM [DLBC_Dev].[dbo].[MEMBER];
+
+WITH PREP AS (SELECT [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Cellphone]
+      ,[eMail Address]
+      ,isnull([State_ID],'Unknown') as [State_ID]
+	  ,row_number() over (partition by [member code] order by [member code]  ) as unique_loc
+  FROM [DLBC_Stg].[dbo].[Member All CDC Stg]),
+SOURCE AS
+(
+SELECT [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Cellphone]
+      ,[eMail Address]
+      ,[LOCATION_ID]
+  FROM [PREP] M
+LEFT JOIN [DLBC_Dev].[dbo].[LOCATION] L
+  ON M.[State_ID] = L.[LOCATION_NM]
+  OR M.[State_ID] = L.[STATE_NM]
+  WHERE unique_loc = 1)
+
+MERGE  [DLBC_Dev].[dbo].[MEMBER] AS T
+USING SOURCE AS S
+ON T.[MEMBER_CODE] = S.[Member Code]
+
+--When records are matched, update the records if there is any change to the named columns
+WHEN MATCHED THEN 
+UPDATE 
+SET T.[PRIMARY_FIRST_NM] = S.[First Name],
+    T.[PRIMARY_LAST_NM] =  S.[Last Name],
+    T.[PRIMARY_MIDDEL_NM] = S.[Middle Name],
+	T.[PRIMARY_EMAIL_ADDRESS_TXT] = S.[eMail Address],
+	T.[GENDER] = S.[Gender]
+--When records are not matched, insert the records into the Target meaning they donot exist in the target
+WHEN NOT MATCHED BY TARGET THEN 
+INSERT ([PARENT_MEMBER_ID],[PRIMARY_FIRST_NM],[PRIMARY_MIDDEL_NM],[PRIMARY_LAST_NM],[DOB],[PRIMARY_EMAIL_ADDRESS_TXT],[PRIMARY_PHONE_NO]
+      ,[CREATE_USER_ID],[CREATE_DT],[LAST_UPDATE_USER_ID],[LAST_UPDATE_DT],[LOCATION_ID],[GENDER],[MEMBER_CODE])
+
+ VALUES     (1,S.[First Name],S.[Middle Name],S.[Last Name],GETDATE(),S.[eMail Address],S.[Cellphone],USER,GETDATE(),USER,GETDATE(),S.[LOCATION_ID],S.[Gender],S.[Member Code])
+WHEN NOT MATCHED BY SOURCE THEN
+DELETE;
+END
+SET ANSI_WARNINGS ON;
+EXEC LoadMEMBER;
