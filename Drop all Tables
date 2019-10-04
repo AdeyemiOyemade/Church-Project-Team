@@ -1,0 +1,4 @@
+Select 'Drop Table [' + Table_Schema + '].[' + Table_Name + ']' 
+From   Information_Schema.Tables 
+Where  Table_Type = 'Base Table'
+       And Table_Schema = 'dbo'
