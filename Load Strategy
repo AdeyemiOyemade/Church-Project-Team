@@ -1,6 +1,10 @@
 
 --Added a unique code to member tables
---Added a column to accompdate the unique code
+--Added a column to accomodate the unique code
+
+A   ----   B
+1,2         1,2,3,4
+3,4,5,6    
 
   Alter Table [DLBC_Dev].[dbo].[MEMBER]
   Add [MEMBER_CODE] VARCHAR(50) NOT NULL;
@@ -47,7 +51,7 @@ SELECT
       ,[State_ID]
 
   INTO [Member All CDC Stg]
-  FROM [DLBC_Stg].[dbo].[Member All Stg]
+  FROM [DLBC_Stg].[dbo].[Member All Stg1]
   
   
  --Dropping current index and recreating
@@ -204,9 +208,11 @@ SELECT [Member Code]
       ,[Gender]
       ,[Cellphone]
       ,[eMail Address]
+--Lookup location ID from location Table in Target
       ,[LOCATION_ID]
   FROM [PREP] M
 LEFT JOIN [DLBC_Dev].[dbo].[LOCATION] L
+--Lookup location ID from location Table in Target using a join condition
   ON M.[State_ID] = L.[LOCATION_NM]
   OR M.[State_ID] = L.[STATE_NM]
   WHERE unique_loc = 1)
