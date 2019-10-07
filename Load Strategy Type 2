@@ -1,0 +1,71 @@
+CREATE PROCEDURE LoadMEMBER AS
+BEGIN
+DELETE FROM [DLBC_Dev].[dbo].[MEMBER];
+
+WITH PREP AS (SELECT [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Cellphone]
+      ,[eMail Address]
+      ,isnull([State_ID],'Unknown') as [State_ID]
+	  ,row_number() over (partition by [member code] order by [member code]  ) as unique_loc
+  FROM [DLBC_Stg].[dbo].[Member All CDC Stg]),
+SOURCE AS
+(
+SELECT [Member Code]
+      ,[Last Name]
+      ,[First Name]
+      ,[Middle Name]
+      ,[Gender]
+      ,[Cellphone]
+      ,[eMail Address]
+--Lookup location ID from location Table in Target
+      ,[LOCATION_ID]
+  FROM [PREP] M
+LEFT JOIN [DLBC_Dev].[dbo].[LOCATION] L
+--Lookup location ID from location Table in Target using a join condition
+  ON M.[State_ID] = L.[LOCATION_NM]
+  OR M.[State_ID] = L.[STATE_NM]
+  WHERE unique_loc = 1)
+
+MERGE  [DLBC_Dev].[dbo].[MEMBER] AS T
+USING SOURCE AS S
+ON T.[MEMBER_CODE] = S.[Member Code]
+
+--When records are matched, update the records if there is any change to the named columns
+WHEN MATCHED AND T.[RECORD_CHEKSUM] <> S.[Record Checksum] 
+AND T.[ACTIVE_IND] = 'Y' THEN 
+UPDATE 
+SET T.[END_EFFECTIVE_DT] = (GETDATE() - 1),
+    T.[ACTIVE_IND] = 'N',
+	T.[LAST_UPDATE_DT] = GECTDATE(),
+	T.[LAST_UPDATE_USER_ID] = USER
+	
+    
+--When records are not matched, insert the records into the Target meaning they donot exist in the target
+WHEN NOT MATCHED BY TARGET THEN 
+INSERT ([MEMBER_CODE],[PARENT_MEMBER_ID],[PRIMARY_FIRST_NM],[PRIMARY_MIDDEL_NM],[PRIMARY_LAST_NM],[GENDER],[DOB],[PRIMARY_EMAIL_ADDRESS_TXT],[PRIMARY_PHONE_NO]
+      ,[CREATE_USER_ID],[CREATE_DT],[LAST_UPDATE_USER_ID],[LAST_UPDATE_DT],[LOCATION_ID],[BEGIN_EFFECTIVE_DT],[END_EFFECTIVE_DT],[ACTIVE_IND],[RECORD_CHECKSUM])
+
+ VALUES     (S.[Member Code],1,S.[First Name],S.[Middle Name],S.[Last Name],S.[Gender],GETDATE(),S.[eMail Address],S.[Cellphone],USER,GETDATE(),USER,GETDATE(),S.[LOCATION_ID],GETDATE(),'12/31/9999','Y',S.[Record Checksum])
+WHEN NOT MATCHED BY SOURCE THEN
+DELETE;
+END
+OUTPUT S.[Member code], $action into @MergeLog;
+
+SELECT MergeAction, count(*)
+FROM   @MergeLog
+GROUP BY MergeAction
+
+-- Create a Sequence to control control the population of the sorrogate key
+
+CREATE SEQUENCE Member_load
+    AS INT
+    START WITH 1
+    INCREMENT BY 1
+---Changed Record verify
+
+update dbo.tblStaging set DimensionCheckSum=
+BINARY_CHECKSUM(SourceSystemID, Attribute1, Attribute2, Attribute3)
