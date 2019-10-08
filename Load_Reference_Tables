@@ -1,0 +1,118 @@
+Create procedure LoadRefValues AS
+BEGIN
+--Populate the standard Address Type 
+
+INSERT INTO [DLBC_Dev].[dbo].[STANDARD_ADDRESS_TYPE](
+  [ADDRESS_TYPE_CD]
+      ,[ADDRESS_TYPE_NM]
+      ,[DESCRIPTION_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+      ('P', 'Permanent','Permanent Address',user,getdate()),
+	  ('M', 'Mailing','Mailing Address',user,getdate()),
+	  ('O', 'Office','Office Address',user,getdate()),
+	  ('T', 'Temporary','Temporary Address',user,getdate());
+
+--Populate the standard Member Type 
+
+   INSERT INTO [DLBC_Dev].[dbo].[MEMBER_TYPE](
+      [MEMBER_TYP]
+      ,[DESCRIPTION_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+      (  'V','Visitor',user,getdate()),
+	  ('N','New Member',user,getdate()),
+	  ('E', 'Existing Member',user,getdate()),
+	  ('R', 'Returning Member',user,getdate());
+
+--Populate the standard Contribution 
+
+ INSERT INTO [DLBC_Dev].[dbo].[STANDARD_CONTRIBUTION](
+      [TYPE_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+      (  'Tithe',user,getdate()),
+	  ('Offering',user,getdate()),
+	  ('Building Fund',user,getdate()),
+	  ('Headquater Project',user,getdate()),
+	  ('Youth Fest',user,getdate()),
+	  ('Young Adult Program',user,getdate()),
+	  ('Easter Retreat',user,getdate()),
+	  ('December Retreat',user,getdate()),
+	  ('Special Event',user,getdate()),
+	  ('Children Program',user,getdate()),
+	  ('Senior Citizen Program',user,getdate());
+
+--Populate the standard Group
+INSERT INTO [DLBC_Dev].[dbo].[STANDARD_GROUP]([GROUP_TYPE_CD]
+      ,[GROUP_AGE_BAND]
+      ,[GROUP_NM]
+      ,[DESCRIPTION_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+     (  'C','Age 1 to 8','Children','Children from Ages 1 to 5 years',user,getdate()),
+	  ('Y','Age 9 to 15','Youth','Young People from Ages 6 to 15',user,getdate()),
+	  ('YA','Age 20 to 38','Young Adult','Young People from Ages 20 to 38',user,getdate()),
+	  ('A','Age 39 to 65','Adult','Adult People from 39 to 65',user,getdate()),
+	  ('S','Age 65  Above','Seniors','Senior Adult People 65 and Above',user,getdate());
+
+--Populate the standard Ministry
+
+ INSERT INTO [DLBC_Dev].[dbo].[STANDARD_MINISTRY](
+      [MINISTRY_NM]
+      ,[DESCRIPTION_TXT]
+      ,[CREATE_USER_ID]
+      ,[CREATE_DT])
+  VALUES
+     (  'Pastorial','Pastorial',user,getdate()),
+	  ('Chior','Choriters',user,getdate()),
+	  ('Sanitation','Sanitation',user,getdate()),
+	  ('Praise Worship','Praise Worship',user,getdate()),
+	  ('Children','Children',user,getdate()),
+	  ('Usher','Ushering',user,getdate()),
+	   ('Electronics','Electronics',user,getdate()),
+	   ('Accounts','Accounting',user,getdate()),
+	   ('Transport','Transportation',user,getdate());
+--Populate the Standard Events
+
+INSERT INTO [DLBC_Dev].[dbo].[STANDARD_EVENT](
+         [EVENT_CODE]
+        ,[EVENT_NM]
+        ,[DESCRIPTION_TXT]
+        ,[CREATE_USER_ID]
+        ,[CREATE_DT])
+   VALUES
+     ('IC','International Congress','International Congress',user,getdate()),
+     ('DCAC','DC Area Crusade','DC Area Crusade', user,getdate()),
+     ('YAGT','Young Adult Get Together','Young Adult Get Together',user,getdate()),
+     ('MC','Mini-Congress','Mini-Congress',user,getdate()),
+     ('CR','Couples Dinner','Couples Dinner',user,getdate()),
+     ('RQE','Regional Quarterly Evangelism','Regional Quarterly Evangelism',user,getdate()),
+     ('SWS','Sunday Worship Service','Sunday Worship Service',user,getdate()),
+     ('BS','Bible Study','Bible Study',user,getdate()),
+     ('RS','Revival Service','Revival Service', user, getdate()),
+     ('WM','Workers Meeting','Workers Meeting',user,	getdate()), 
+	 ('PM','Prayer Meeting','Prayer Meeting',user,	getdate()),
+	 ('RWR','Regional Workers Retreat','Regional Workers Retreat', user,getdate()),
+	 ('ER','Easter Retreat','Easter Retreat', user, getdate()),
+	 ('ECRC','East-coast Zonal Convention','East-coast Zonal Convention', user, getdate()),
+	 ('YAR','Young Adult Retreat','Young Adult Retreat',user,getdate()),
+	 ('FD', 'Fathers Day','Fathers Day',user,getdate()),
+	 ('YF','Youth Fest','Youth Fest',user,getdate()),
+	 ('CD','Childrens Day','Childrens Day',user,getdate()),
+	 ('SRFSWW','Special Retreat for Seniors, Widows and Widowers','Special Retreat for Seniors, Widows and Widowers',user,getdate()),
+	 ('WC','Womens Conference','Womens Conference', user, getdate()),
+	 ('ID','International Day','International Day',user,getdate()),
+	 ('FD','Friends Day','Friends Day',user,getdate()),
+	 ('TGD','Thanksgiving Day','Thanksgiving Day',user,getdate()),
+	 ('TGSS','Thanksgiving Sunday Service','Thanksgiving Sunday Service', user,getdate()),
+	 ('DR','December Retreat','December Retreat',user,getdate()),
+	 ('NYE','New Years Eve','New Years Eve',user,getdate());
+	 
+	 
+	 
+END;
